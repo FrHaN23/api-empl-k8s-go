@@ -186,9 +186,7 @@ kubectl rollout status deployment/api-empl
 
 ---
 
-## Apply Migration (Manual or Job)
-
-### Option A — Manual (Recommended)
+## Apply Migration
 
 Copy SQL:
 
