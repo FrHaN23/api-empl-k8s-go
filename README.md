@@ -1,165 +1,281 @@
+# Employee CRUD API — Go + Postgres + SQLX + Docker + Kubernetes (kind)
 
-# Dating Sim Go
-
-**`dating-sim-go`** is a backend application built in Go, designed to power a dating simulation experience. It provides features like user authentication, swipe mechanics, profile management, and more, all built with a focus on performance and scalability.
-
----
-
-## ✨ Technical Document
-
-for [Technical Document](https://docs.google.com/document/d/e/2PACX-1vT8flrtJAYy6lN1G3s0UQIlfc--3XKrt-L29wp6naFUV5xUimjFeq0nwi_heou5B2OGCOQ7ANscP7oF/pub) please go to this link
+A simple **Employee CRUD REST API** implemented in Go, using PostgreSQL and sqlx.  
+Includes Docker, Docker Compose, and Kubernetes (kind) manifests for local development and demo deployment.
 
 ---
 
-## 🚀 Features
+## Project Overview
 
-### 🔑 User Authentication
-- Routes for user login, registration, and session management.
+This project demonstrates a minimal but production-like backend service using:
 
-### 💕 Swipe Mechanics
-- Allows users to interact with potential matches.
-- Optimized using **Redis** for caching swipe data and enhancing performance.
-
-### 👤 Profile Management
-- Supports creating, updating, and retrieving user profiles.
-
-### ⭐ Upgrade Services
-- Handles premium features or in-app enhancements via dedicated routes.
-
-### 🩺 Health Check
-- A `/health` endpoint to monitor application readiness and status.
-
----
-
-## 🛠️ Tech Stack
-
-- **Go (Golang)**: The core programming language, chosen for its speed and scalability.
-- **Redis**: Used for caching dynamic data like swipe interactions.
-- **SQL Database** (PostgreSQL/MySQL): Persistent storage for user data and settings.
-- **Gorilla Mux**: A router library for clean and organized API endpoint management.
-- **Custom Middleware**: Handles additional request/response processes such as logging and authentication.
-- **Environment Variables**: Managed through a custom `dotenv` package.
+- Go 1.25+
+- PostgreSQL with sqlx
+- PostgreSQL DB (schema in migrations/)
+- Gorilla Mux router
+- Clean structure: handler → service → repository
+- Docker multi-stage build
+- Docker Compose for local development
+- Kubernetes manifests for running in kind (local Kubernetes)
+- Kubernetes (kind) deployment with:
+  - Postgres Deployment + PVC
+  - API Deployment + NodePort
+  - Secrets / ConfigMaps
 
 ---
 
-## 🏗️ Architecture
+## Repo Structure
 
-1. **Handler-Based Structure**:
-   - Clean separation of concerns for each feature (e.g., `Swipe`, `Auth`, `Profile`).
-   - Grouped and organized routes for modularity.
-
-2. **Custom Redis Client**:
-   - `redis.RedisClient` is initialized at application startup and shared across handlers.
-
-3. **Database Initialization**:
-   - A dedicated initialization process (`db.Conn()`) ensures reliable database connections.
-
-4. **Graceful Shutdown**:
-   - Resources like Redis connections are cleaned up during server shutdown.
-
----
-
-## 📦 Local Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/dating-sim-go.git
-   cd dating-sim-go
-   ```
-
-2. Set up environment variables in a `.env` or just copy `.env.example` file:
-   ```plaintext
-   REDIS_ADDR=localhost:6379
-   REDIS_PASSWORD=
-   REDIS_DB=0
-   DB_HOST=your-database-host
-   DB_USER=your-database-user
-   DB_PASSWORD=your-database-password
-   DB_NAME=your-database-name
-   ```
-
-3. Install dependencies:
-   ```bash
-   go mod tidy
-   ```
-
-4. Run the application:
-   ```bash
-   go run main.go
-   ```
+```
+api-empl-k8s-go/
+├── handler/
+├── models/
+├── repos/
+├── service/
+├── utils/
+├── routes/
+├── modules/
+├── migrations/
+│   └── 001_create_employees_table.sql
+├── k8s/
+│   ├── deploy-app.yml
+│   ├── deploy-postgres.yml
+│   ├── secret-postgres.yml
+│   ├── pvc-postgres.yml
+│   ├── migrate-job.yml
+├── main.go
+├── Dockerfile
+├── docker-compose.yml
+├── .env
+└── README.md
+```
 
 ---
 
-## 📦 Installation using docker compose
+## Prerequisites
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/dating-sim-go.git
-   cd dating-sim-go
-   ```
+Ensure you have installed:
 
-2. Set up environment variables in a `.env` or just copy `.env.example` file:
-   ```plaintext
-   REDIS_ADDR=localhost:6379
-   REDIS_PASSWORD=
-   REDIS_DB=0
-   DB_HOST=your-database-host
-   DB_USER=your-database-user
-   DB_PASSWORD=your-database-password
-   DB_NAME=your-database-name
-   ```
-3. Build and start the services using Docker Compose:
-   ```bash
-    docker-compose up --build
-   ```
-4. Access the application at http://localhost:5000.
-
-## 🧪 Testing
-
-All testing of endpoints included at `dating-sim-go.postman_collection.json` using postman and other alternatives
-
-## 🛡️ Endpoints
-
-### **Health Check**
-- **GET** `/health`
-
-### **Auth Routes**
-- Login, Registration, and Logout functionality.
-
-### **Swipe Routes**
-- Handles interactions with potential matches.
-
-### **Profile Routes**
-- Manage user profile information.
-
-### **Upgrade Routes**
-- Access premium or enhanced features.
+- Go 1.25+
+- Docker + docker compose
+- kind
+- kubectl
 
 ---
 
-## 🛞 Future Plans
+## Environment Variables
 
-1. **Gamification**:
-   - Badges, levels, and rewards to enhance user engagement.
-2. **AI Matching**:
-   - A recommendation system based on user preferences and behavior.
-3. **Real-Time Communication**:
-   - WebSocket integration for live chat and notifications.
+Create `.env`:
 
----
-
-## 👨‍💻 Contributors
-
-- **frhan23**: Project Owner and Main Developer
-
-Feel free to contribute to this project by submitting issues or pull requests. 😊
+```
+DB_NAME=employees_db
+DB_HOST=db
+DB_USERNAME=frhan
+DB_PASSWORD=db_postgres
+DB_PORT=5432
+DB_TZ=Asia/Jakarta
+```
 
 ---
 
-## 📄 License
+## Run Locally (Without Docker)
 
-This project is licensed under the [MIT License](LICENSE).
+```bash
+go mod tidy
+go run .
+# API listens on :5000 by default
+```
 
 ---
 
-Enjoy building your dating simulation app! 💕
+## Docker & Docker Compose
+
+### Build image
+
+```bash
+docker build -t api-empl:latest .
+```
+
+### Compose up
+
+```bash
+docker compose up --build
+```
+This will start app and db services. The DB init scripts can be placed under migrations/ and mounted into /docker-entrypoint-initdb.d by the compose file if desired.
+
+---
+
+## Database Migrations (Manual)
+
+Migration SQL files live in migrations/ (e.g. 001_create_employees_table.sql). For a quick one-off run:
+```bash
+psql -h localhost -U frhan -d employees_db -f migrations/001_create_employees_table.sql
+```
+(Adjust connection info to match your environment.)
+
+---
+
+## Kubernetes (kind) — Local Cluster
+
+### Create kind cluster
+
+```bash
+kind create cluster
+```
+
+### Load local docker image
+
+```bash
+docker build -t api-empl:latest .
+kind load docker-image api-empl:latest
+```
+
+---
+
+## PVC / Storage Note
+
+Kind requires a local path provisioner.
+
+Install:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+```
+
+Create PVC:
+
+```bash
+kubectl apply -f k8s/pvc-postgres.yml
+```
+
+---
+
+## Deploy Sequence (Quick)
+
+### 1. Create postgres secrets
+
+```bash
+kubectl create secret generic secret-postgres   --from-literal=POSTGRES_USER=frhan   --from-literal=POSTGRES_PASSWORD=db_postgres   --from-literal=POSTGRES_DB=employees_db
+```
+or from the file
+```bash
+kubectl apply -f k8s/secret-postgres.yml
+```
+
+### 2. Deploy postgres server
+
+```bash
+kubectl apply -f k8s/deploy-postgres.yml
+kubectl rollout status deployment/postgres
+```
+
+### 3. Deploy API
+
+Load image (required):
+
+```bash
+kind load docker-image api-empl:latest
+```
+
+Apply:
+
+```bash
+kubectl apply -f k8s/deploy-app.yml
+kubectl rollout status deployment/api-empl
+```
+
+---
+
+## Apply Migration (Manual or Job)
+
+### Option A — Manual (Recommended)
+
+Copy SQL:
+
+```bash
+PODPG=$(kubectl get pod -l app=postgres -o jsonpath='{.items[0].metadata.name}')
+kubectl cp migrations/001_create_employees_table.sql $PODPG:/tmp/migrate.sql
+```
+
+Execute:
+
+```bash
+PGUSER=$(kubectl get secret secret-postgres -o jsonpath='{.data.POSTGRES_USER}' | base64 -d)
+PGPASS=$(kubectl.get secret secret-postgres -o jsonpath='{.data.POSTGRES_PASSWORD}' | base64 -d)
+PGDB=$(kubectl.get secret secret-postgres -o jsonpath='{.data.POSTGRES_DB}' | base64 -d)
+
+kubectl exec -it $PODPG -- sh -c "export PGPASSWORD='$PGPASS'; psql -U '$PGUSER' -d '$PGDB' -f /tmp/migrate.sql"
+```
+---
+
+## API Endpoints
+
+| Method | Endpoint          | Description        |
+|--------|-------------------|--------------------|
+| GET    | /employees        | List employees     |
+| POST   | /employees        | Create employee    |
+| GET    | /employees/{id}   | Get employee       |
+| PUT    | /employees/{id}   | Update employee    |
+| DELETE | /employees/{id}   | Soft delete        |
+
+---
+
+## Troubleshooting
+
+### ImagePullBackOff
+
+```
+kind load docker-image api-empl:latest
+```
+
+### Postgres PVC Corrupt
+
+```bash
+kubectl delete pvc pvc-postgres
+kubectl apply -f k8s/pvc-postgres.yml
+```
+
+### Missing secrets/configmaps
+
+```bash
+kubectl get secrets
+kubectl get configmap
+```
+
+### Postgres cannot start
+
+Delete PV + PVC:
+
+```bash
+kubectl delete pvc pvc-postgres
+kubectl delete pv $(kubectl get pv -o jsonpath='{.items[0].metadata.name}')
+```
+
+---
+
+## Future Improvements
+
+- Real migration tool
+- Health checks
+- Helm chart
+- CI/CD pipeline
+- Logging + metrics
+
+## Useful Commands
+
+```bash
+# K8s
+kubectl get pods -A
+kubectl describe pod <pod-name>
+kubectl logs deployment/postgres -f
+
+# Load image into kind
+kind load docker-image api-empl:latest
+
+# Create secret (example)
+kubectl create secret generic secret-postgres \
+  --from-literal=POSTGRES_USER=frhan \
+  --from-literal=POSTGRES_PASSWORD=db_postgres \
+  --from-literal=POSTGRES_DB=employees_db
+
+```
