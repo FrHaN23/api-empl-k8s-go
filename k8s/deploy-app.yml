@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-empl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-empl
+  template:
+    metadata:
+      labels:
+        app: api-empl
+    spec:
+      containers:
+        - name: api-empl
+          image: api-empl:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: api-empl-config
+            - secretRef:
+                name: api-empl-secret
+          ports:
+            - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: empl-api
+spec:
+  type: NodePort
+  selector:
+    app: api-empl
+  ports:
+    - port: 5000
+      targetPort: 5000
+      nodePort: 30000

@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-employees
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: postgres:15
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              PGUSER=$(cat /secrets/POSTGRES_USER)
+              PGPASSWORD=$(cat /secrets/POSTGRES_PASSWORD)
+              PGDB=$(cat /secrets/POSTGRES_DB)
+              export PGPASSWORD
+              echo "Running migrations against ${PGDB} as ${PGUSER} on host postgres:5432"
+              for f in /migrations/*.sql; do
+                echo "---- executing $f ----"
+                psql -h postgres -U "$PGUSER" -d "$PGDB" -f "$f"
+              done
+          volumeMounts:
+            - name: migrations
+              mountPath: /migrations
+            - name: secret
+              mountPath: /secrets
+              readOnly: true
+      volumes:
+        - name: migrations
+          configMap:
+            name: postgres-migrations
+        - name: secret
+          secret:
+            secretName: secret-postgres
+  ttlSecondsAfterFinished: 3600
