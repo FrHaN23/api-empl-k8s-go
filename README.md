@@ -150,7 +150,7 @@ kubectl apply -f k8s/pvc-postgres.yml
 
 ---
 
-## Deploy Sequence (Quick)
+## Deploy
 
 ### 1. Create postgres secrets
 
@@ -177,7 +177,13 @@ Load image (required):
 kind load docker-image api-empl:latest
 ```
 
-Apply:
+Apply configMap and secret app:
+```bash
+kubectl apply -f k8s/configmap-app.yml
+kubectl apply -f k8s/secret-app.yml
+```
+
+Apply the app:
 
 ```bash
 kubectl apply -f k8s/deploy-app.yml
